@@ -10,7 +10,7 @@ export default async function handler(request, response) {
       const joke = await Joke.findById(id);
 
       if (!joke) {
-        response.status(404).json({ status: "Not Found" });
+        return response.status(404).json({ status: "Not Found" });
       }
 
       response.status(200).json(joke);
