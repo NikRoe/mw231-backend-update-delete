@@ -2,6 +2,21 @@ import useSWR from "swr";
 import { useState } from "react";
 import { useRouter } from "next/router";
 import JokeForm from "../JokeForm";
+import useSWRMutation from "swr/mutation";
+import Link from "next/link";
+
+async function sendRequest(url, { arg }) {
+  const response = await fetch(url, {
+    method: "PUT",
+    body: JSON.stringify(arg),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    console.error("Something went wrong");
+  }
+}
 
 export default function Joke() {
   const [isEditMode, setIsEditMode] = useState(false);
@@ -10,13 +25,37 @@ export default function Joke() {
 
   const { data, isLoading } = useSWR(id ? `/api/jokes/${id}` : null);
 
+  const { trigger, isMutating } = useSWRMutation(
+    `/api/jokes/${id}`,
+    sendRequest
+  );
+
   function handleEdit(event) {
     event.preventDefault();
+
+    const formData = new FormData(event.target);
+    const jokeData = Object.fromEntries(formData);
+
+    trigger(jokeData);
   }
 
-  async function handleDelete() {}
+  async function handleDelete() {
+    try {
+      const response = await fetch(`/api/jokes/${id}`, {
+        method: "DELETE",
+      });
 
-  if (isLoading) {
+      if (!response.ok) {
+        console.error(response.error);
+      } else {
+        router.push("/");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  if (isLoading || isMutating) {
     return <h1>Loading...</h1>;
   }
 
@@ -45,9 +84,7 @@ export default function Joke() {
       {isEditMode && (
         <JokeForm onSubmit={handleEdit} value={data.joke} isEditMode={true} />
       )}
-      <button type="button" onClick={() => router.push("/")}>
-        Back to all
-      </button>
+      <Link href="/">Back to all</Link>
     </>
   );
 }

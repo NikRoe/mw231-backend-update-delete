@@ -12,6 +12,24 @@ export default async function handler(request, response) {
       return response.status(404).json({ status: "Not Found" });
     }
 
-    response.status(200).json(joke);
+    return response.status(200).json(joke);
+  }
+
+  if (request.method === "PUT") {
+    await Joke.findByIdAndUpdate(id, {
+      $set: request.body,
+    });
+
+    return response.status(200).json({ status: "Joke updated!" });
+  }
+
+  if (request.method === "DELETE") {
+    try {
+      await Joke.findByIdAndDelete(id);
+
+      return response.status(200).json({ status: "Joke deleted!" });
+    } catch (error) {
+      return response.status(400).json({ error: error.message });
+    }
   }
 }
