@@ -5,31 +5,37 @@ export default async function handler(request, response) {
   await dbConnect();
   const { id } = request.query;
 
-  if (request.method === "GET") {
-    const joke = await Joke.findById(id);
+  switch (request.method) {
+    case "GET":
+      const joke = await Joke.findById(id);
 
-    if (!joke) {
-      return response.status(404).json({ status: "Not Found" });
-    }
+      if (!joke) {
+        return response.status(404).json({ status: "Not Found" });
+      }
 
-    return response.status(200).json(joke);
-  }
+      response.status(200).json(joke);
+      break;
 
-  if (request.method === "PUT") {
-    await Joke.findByIdAndUpdate(id, {
-      $set: request.body,
-    });
+    case "PUT":
+      await Joke.findByIdAndUpdate(id, {
+        $set: request.body,
+      });
 
-    return response.status(200).json({ status: "Joke updated!" });
-  }
+      response.status(200).json({ status: "Joke updated!" });
+      break;
 
-  if (request.method === "DELETE") {
-    try {
-      await Joke.findByIdAndDelete(id);
+    case "DELETE":
+      try {
+        await Joke.findByIdAndDelete(id);
 
-      return response.status(200).json({ status: "Joke deleted!" });
-    } catch (error) {
-      return response.status(400).json({ error: error.message });
-    }
+        response.status(200).json({ status: "Joke deleted!" });
+      } catch (error) {
+        response.status(400).json({ error: error.message });
+      }
+      break;
+    default:
+      console.log("request method was neither GET, PUT or DELETE");
+      response.status(405).json({ error: "Method not allowed" });
+      break;
   }
 }
